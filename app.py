@@ -135,8 +135,12 @@ def main() -> None:
         st.sidebar.warning("Enter a user ID to start chatting.")
         st.stop()
 
-    mem0_service = get_mem0_service()
-    gemini_service = get_gemini_service()
+    try:
+        mem0_service = get_mem0_service()
+        gemini_service = get_gemini_service()
+    except Exception as exc:
+        st.error(f"Failed to connect to Mem0 Cloud or Gemini: {exc}")
+        st.stop()
 
     chat_tab, memory_tab = st.tabs(["Chat", "Memory browser"])
     with chat_tab:

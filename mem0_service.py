@@ -28,16 +28,16 @@ class Mem0Service:
             response = self._client.search(
                 query=query, filters={"user_id": user_id}, top_k=limit
             )
+            return _parse_memories(response)
         except Exception as exc:
             raise Mem0ServiceError(f"Failed to search memories: {exc}") from exc
-        return _parse_memories(response)
 
     def get_all_memories(self, user_id: str) -> list[Memory]:
         try:
             response = self._client.get_all(filters={"user_id": user_id})
+            return _parse_memories(response)
         except Exception as exc:
             raise Mem0ServiceError(f"Failed to list memories: {exc}") from exc
-        return _parse_memories(response)
 
     def delete_memory(self, memory_id: str) -> None:
         try:

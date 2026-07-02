@@ -1,7 +1,7 @@
 [project]
 name = "mem0-assistant"
 version = "0.1.0"
-description = "Add your description here"
+description = "Multi-user Streamlit chat assistant backed by Mem0 Cloud memory and Gemini 2.5 Flash"
 requires-python = ">=3.13"
 dependencies = [
     "google-genai>=2.10.0",

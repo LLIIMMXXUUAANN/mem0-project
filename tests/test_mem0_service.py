@@ -87,6 +87,15 @@ def test_search_memories_wraps_errors():
         service.search_memories("alice", "diet")
 
 
+def test_search_memories_wraps_malformed_response():
+    client = FakeMemoryClient()
+    client.search_response = {"results": [{"id": "1"}]}  # missing "memory" key
+    service = Mem0Service(client)
+
+    with pytest.raises(Mem0ServiceError):
+        service.search_memories("alice", "diet")
+
+
 def test_get_all_memories_scopes_by_user():
     client = FakeMemoryClient()
     client.get_all_response = {"results": [{"id": "2", "memory": "Vegetarian"}]}
@@ -96,6 +105,15 @@ def test_get_all_memories_scopes_by_user():
 
     assert result == [Memory(id="2", text="Vegetarian")]
     assert client.get_all_calls == [{"user_id": "alice"}]
+
+
+def test_get_all_memories_wraps_malformed_response():
+    client = FakeMemoryClient()
+    client.get_all_response = None  # not a dict or a list
+    service = Mem0Service(client)
+
+    with pytest.raises(Mem0ServiceError):
+        service.get_all_memories("alice")
 
 
 def test_delete_memory_calls_client():

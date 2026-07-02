@@ -68,16 +68,6 @@ def test_search_memories_parses_results_dict():
     assert client.search_calls == [("diet", {"user_id": "alice"}, 3)]
 
 
-def test_search_memories_parses_bare_list():
-    client = FakeMemoryClient()
-    client.search_response = [{"id": "1", "memory": "Allergic to nuts"}]
-    service = Mem0Service(client)
-
-    result = service.search_memories("alice", "diet")
-
-    assert result == [Memory(id="1", text="Allergic to nuts")]
-
-
 def test_search_memories_wraps_errors():
     client = FakeMemoryClient()
     client.raise_on = "search"

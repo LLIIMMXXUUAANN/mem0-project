@@ -46,8 +46,6 @@ class Mem0Service:
             raise Mem0ServiceError(f"Failed to delete memory: {exc}") from exc
 
 
-def _parse_memories(response: Any) -> list[Memory]:
-    # mem0's SDK has been observed returning both a bare list and a
-    # {"results": [...]} dict depending on version; handle both.
-    items = response.get("results", []) if isinstance(response, dict) else response
+def _parse_memories(response: dict[str, Any]) -> list[Memory]:
+    items = response.get("results", [])
     return [Memory(id=item["id"], text=item["memory"]) for item in items]

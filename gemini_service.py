@@ -37,7 +37,7 @@ class GeminiService:
                 contents=contents,
                 config=types.GenerateContentConfig(
                     system_instruction=system_instruction,
-                    temperature=0.4,
+                    temperature=0.0,
                 ),
             )
             return response.text

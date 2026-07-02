@@ -42,6 +42,10 @@ def render_chat(mem0_service: Mem0Service, gemini_service: GeminiService, user_i
     history_key = f"chat_history:{user_id}"
     if history_key not in st.session_state:
         st.session_state[history_key] = []
+
+    if st.button("Clear chat", key="clear_chat_button"):
+        st.session_state[history_key] = []
+
     history = st.session_state[history_key]
 
     for turn in history:

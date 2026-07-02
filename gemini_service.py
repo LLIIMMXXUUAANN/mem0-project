@@ -40,9 +40,9 @@ class GeminiService:
                     temperature=0.4,
                 ),
             )
+            return response.text
         except Exception as exc:
             raise GeminiServiceError(f"Failed to generate reply: {exc}") from exc
-        return response.text
 
 
 def build_system_instruction(memory_context: list[str]) -> str:

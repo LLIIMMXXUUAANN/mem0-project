@@ -101,19 +101,22 @@ def render_chat(mem0_service: Mem0Service, gemini_service: GeminiService, user_i
 def render_memory_browser(mem0_service: Mem0Service, user_id: str) -> None:
     st.subheader(f"Memories for {user_id}")
 
+    view_key = "memory_browser_view"
     query = st.text_input("Search memories", key="memory_search_query")
-    search_clicked = st.button("Search", key="memory_search_button")
-    show_all_clicked = st.button("Show all memories", key="memory_show_all_button")
+    if st.button("Search", key="memory_search_button") and query:
+        st.session_state[view_key] = ("search", query)
+    if st.button("Show all memories", key="memory_show_all_button"):
+        st.session_state[view_key] = ("all", None)
 
+    view = st.session_state.get(view_key)
     results = []
-    if search_clicked and query:
+    if view is not None:
+        mode, search_query = view
         try:
-            results = mem0_service.search_memories(user_id, query)
-        except Mem0ServiceError as exc:
-            st.error(str(exc))
-    elif show_all_clicked:
-        try:
-            results = mem0_service.get_all_memories(user_id)
+            if mode == "search":
+                results = mem0_service.search_memories(user_id, search_query)
+            else:
+                results = mem0_service.get_all_memories(user_id)
         except Mem0ServiceError as exc:
             st.error(str(exc))
 
@@ -123,7 +126,8 @@ def render_memory_browser(mem0_service: Mem0Service, user_id: str) -> None:
         if col2.button("Delete", key=f"delete_{memory.id}"):
             try:
                 mem0_service.delete_memory(memory.id)
-                st.success("Deleted. Click 'Show all memories' to refresh.")
+                st.success("Deleted.")
+                st.rerun()
             except Mem0ServiceError as exc:
                 st.error(str(exc))
 

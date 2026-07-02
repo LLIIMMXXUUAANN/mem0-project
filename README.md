@@ -84,6 +84,25 @@ Notes:
   Alice work with") — see the
   [graph memory docs](https://github.com/mem0ai/mem0/blob/main/docs/platform/features/graph-memory.mdx).
   Not used here to keep the memory model simple (plain text facts only).
+- **`add()` doesn't semantically dedupe — it's "ADD-only."** Every call runs
+  one LLM extraction pass over the messages, and only writes memories for
+  facts it actually finds (a content-free turn like "ok thanks" adds
+  nothing). But the only duplicate check is an **exact-text hash (MD5)** —
+  if you say "I'm allergic to nuts" in one turn and something that implies
+  the same fact but phrased differently in a later turn, mem0 does **not**
+  recognize it as the same fact and will create a **second, separate
+  memory** with its own ID, not update the first. This project hit this
+  directly during manual testing: deleting one "User is allergic to nuts"
+  memory, a near-duplicate reappeared moments later from a different `add()`
+  call. There's no automatic semantic cleanup — that's on you (e.g. your own
+  dedup logic before calling `add_memory`, or periodic `update`/
+  `batch_delete` cleanup) if it matters for your use case. Passing
+  `infer=False` skips extraction entirely and stores your text verbatim,
+  unconditionally, every call — see the
+  [add-memories API docs](https://github.com/mem0ai/mem0/blob/main/docs/api-reference/memory/add-memories.mdx)
+  and the
+  [v3 migration notes](https://github.com/mem0ai/mem0/blob/main/docs/migration/oss-v2-to-v3.mdx)
+  on the "ADD-only" pipeline.
 - Full official docs: [docs.mem0.ai](https://docs.mem0.ai)
 
 ## Manual smoke test

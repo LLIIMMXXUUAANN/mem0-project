@@ -58,6 +58,24 @@ Notes:
   `user_id` kwarg as of Mem0's v3 SDK — see the
   [OSS-to-v3 migration notes](https://github.com/mem0ai/mem0/blob/main/docs/migration/oss-v2-to-v3.mdx).
   `add`/`delete` still accept `user_id` directly.
+- **Filters are stricter than they look — "implicit null scoping."** A
+  partial filter like `{"user_id": "alice"}` does *not* mean "match any
+  `agent_id`/`run_id`" — it means "match `agent_id`/`run_id` that are
+  specifically `null`." So if you wrote a memory with
+  `client.add(messages, user_id="alice", agent_id="nutrition-agent", run_id="session-456")`,
+  then `client.search(query, filters={"user_id": "alice"})` will **not**
+  find it (that memory's `agent_id`/`run_id` aren't null), even though it
+  looks like a plain "get alice's stuff" search. Two ways to actually get it:
+  1. **Match the exact scoping combination you wrote with:**
+     `filters={"AND": [{"user_id": "alice"}, {"agent_id": "nutrition-agent"}, {"run_id": "session-456"}]}`
+  2. **Use a wildcard for fields you don't want to constrain:**
+     `filters={"AND": [{"user_id": "alice"}, {"agent_id": "*"}, {"run_id": "*"}]}`
+     matches alice's memories regardless of `agent_id`/`run_id`.
+  This app only ever calls `add_memory`/`search_memories` with `user_id` and
+  never sets `agent_id`/`run_id`, so every memory here has those as `null`
+  and the plain `{"user_id": ...}` filter matches consistently — but this is
+  a real trap if you extend the project to use `agent_id`/`run_id` later.
+  See the [v2 filters docs](https://github.com/mem0ai/mem0/blob/main/docs/platform/features/v2-memory-filters.mdx).
 - There's also a fully async client (`AsyncMemoryClient`, same method names,
   `await`-able) — see the
   [async client docs](https://github.com/mem0ai/mem0/blob/main/docs/platform/features/async-client.mdx).

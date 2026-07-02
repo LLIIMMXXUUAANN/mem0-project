@@ -24,6 +24,45 @@ for long-term memory and Gemini 2.5 Flash for chat replies.
   chat flow. You can also view stored memories in the Mem0 dashboard at
   app.mem0.ai.
 
+## Mem0 API reference
+
+This project only wraps a handful of `MemoryClient` methods in `mem0_service.py`
+(marked "used here" below). The rest of the platform's API is listed for
+reference — useful if you want to extend this project. All links go to the
+official mem0 docs source on GitHub.
+
+| Method | Used here? | Purpose | Key parameters |
+|---|---|---|---|
+| [`add(messages, ...)`](https://github.com/mem0ai/mem0/blob/main/docs/core-concepts/memory-operations/add.mdx) | ✅ `add_memory` | Store messages as memory; an LLM extracts durable facts from them | `messages` (required), `user_id`/`agent_id`/`run_id` (scoping), `metadata` (custom key-values), `infer` (bool, default `True` — set `False` to store raw text with no LLM extraction), `timestamp` |
+| [`search(query, ...)`](https://github.com/mem0ai/mem0/blob/main/docs/api-reference/memory/search-memories.mdx) | ✅ `search_memories` | Relevance-ranked lookup of memories matching a query | `query` (required), `filters` (dict, e.g. `{"user_id": ...}`, supports `AND`/`OR`/comparison operators), `top_k` (default 20; called `limit` in this project), `threshold` (min similarity score), `rerank` (bool) |
+| [`get_all(filters)`](https://github.com/mem0ai/mem0/blob/main/skills/mem0/SKILL.md) | ✅ `get_all_memories` | Fetch every memory matching a filter, unranked | `filters` (dict, e.g. `{"user_id": ...}`) |
+| [`delete(memory_id)`](https://github.com/mem0ai/mem0/blob/main/docs/core-concepts/memory-operations/delete.mdx) | ✅ `delete_memory` | Delete one memory by ID | `memory_id` (required) |
+| [`delete_all(user_id)`](https://github.com/mem0ai/mem0/blob/main/docs/core-concepts/memory-operations/delete.mdx) | ❌ | Irreversibly delete **every** memory for a user/agent/run in one call | `user_id` / `agent_id` / `run_id` (at least one required) |
+| [`get(memory_id)`](https://github.com/mem0ai/mem0/blob/main/docs/api-reference/memory/get-memory.mdx) | ❌ | Fetch a single memory by ID (vs. `get_all`'s bulk fetch) | `memory_id` (required) |
+| [`update(memory_id, text, ...)`](https://github.com/mem0ai/mem0/blob/main/docs/core-concepts/memory-operations/update.mdx) | ❌ | Replace the text/metadata of an existing memory in place | `memory_id` (required), `text` (new content), `metadata`, `timestamp` |
+| [`batch_update(updates)`](https://github.com/mem0ai/mem0/blob/main/docs/core-concepts/memory-operations/update.mdx) | ❌ | Update up to 1000 memories in one call | `updates` (list of `{"memory_id": ..., "text": ..., "metadata": ...}`) |
+| [`batch_delete(deletes)`](https://github.com/mem0ai/mem0/blob/main/docs/core-concepts/memory-operations/delete.mdx) | ❌ | Delete up to 1000 memories in one call by ID | `deletes` (list of `{"memory_id": ...}`) |
+| `history(memory_id)` | ❌ | Full audit trail of a memory (CREATE/UPDATE events with before/after values and timestamps) | `memory_id` (required) |
+| `users()` | ❌ | List every `user_id` (and `agent_id`/`run_id`) that has memories on your account | none |
+| `delete_users(user_id)` | ❌ | Delete a user entity and all of its memories | `user_id` (required) |
+| `feedback(memory_id, feedback, ...)` | ❌ | Mark a memory as `"POSITIVE"`/`"NEGATIVE"` to help mem0 tune extraction quality | `memory_id`, `feedback`, `feedback_reason` (optional) |
+| `create_memory_export(filters)` / `get_memory_export(id)` | ❌ | Kick off and poll an async bulk export job for memories matching a filter | `filters` (optional) / `memory_export_id` |
+
+Notes:
+- `search`/`get_all`/`delete_all` take a `filters` dict rather than a top-level
+  `user_id` kwarg as of Mem0's v3 SDK — see the
+  [OSS-to-v3 migration notes](https://github.com/mem0ai/mem0/blob/main/docs/migration/oss-v2-to-v3.mdx).
+  `add`/`delete` still accept `user_id` directly.
+- There's also a fully async client (`AsyncMemoryClient`, same method names,
+  `await`-able) — see the
+  [async client docs](https://github.com/mem0ai/mem0/blob/main/docs/platform/features/async-client.mdx).
+  Not used here since Streamlit's script-rerun model doesn't need it.
+- Mem0 also supports **graph memory** (entity relationships, e.g. "who does
+  Alice work with") — see the
+  [graph memory docs](https://github.com/mem0ai/mem0/blob/main/docs/platform/features/graph-memory.mdx).
+  Not used here to keep the memory model simple (plain text facts only).
+- Full official docs: [docs.mem0.ai](https://docs.mem0.ai)
+
 ## Manual smoke test
 
 1. In the sidebar, enter user id `alice`. In the Chat tab, tell the assistant
